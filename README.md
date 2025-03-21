@@ -5,7 +5,7 @@ This is a discord bot made in lua to manage small scale chess tournaments and cl
 **You will need to run this bot on your own and provide the server/hardware for it.**
 # Installation and setup
 First, you need to set up a new application on [discord's developer page](https://discord.com/developers/).
-Once done, set the permissions for the bot and make sure to enable GUILD_MEMBERS and message content intents as the bot will not work without.
+Once done, set the permissions for the bot and make sure to enable "SERVER MEMBRES" and "MESSAGE CONTENT" intents as the bot will not work without.
 
 On the **bot** page (where you enabled the intents) you need to press "reset token" and copy the new token.
 
