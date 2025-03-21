@@ -12,7 +12,7 @@ On the **bot** page (where you enabled the intents) you need to press "reset tok
 Now, download the source code and extract it, make sure the stats.lua file is in the same directory (folder) as the source code file.
 You will need to edit **the last line** in the ```source_code.lua``` and replace YOUR_TOKEN_HERE with the token you have just copied from discord's website.
 
-After that you will need to install lit, luvi, and luvit. Which all can be found on [this](https://github.com/luvit) page along with installation guides.
+After that you will need to install lit, luvi, and luvit - which all can be obtained from following the installation on [this](https://github.com/luvit/lit) page.
 > [!IMPORTANT]
 Make sure to install lit, luvi, and luvit to the same folder that you put the source code into.
 
