@@ -2,8 +2,15 @@
 This is a discord bot made in lua to manage small scale chess tournaments and clubs. 
 
 **You will need to run this bot on your own and provide the server/hardware for it.**
-# Installation
-Download the source code and extract it, make sure the stats.lua file is in the same directory (folder) as the source code file.
+# Installation and setup
+First, you need to set up a new application on [discord's developer page](https://discord.com/developers/).
+Once done, set the permissions for the bot and make sure to enable GUILD_MEMBERS and message content intents as the bot will not work without.
+
+On the **bot** page (where you enabled the intents) you need to press "reset token" and copy the new token.
+
+Now, download the source code and extract it, make sure the stats.lua file is in the same directory (folder) as the source code file.
+You will need to edit the last line in the ```source_code.lua``` and replace YOUR_TOKEN_HERE with the token you have just copied from discords website.
+
 After that you will need to install lit, luvi, and luvit. Which all can be found on [this](https://github.com/luvit) page along with installation guides.
 > [!IMPORTANT]
 Make sure to install lit, luvi, and luvit to the same folder that you put the source code into.
