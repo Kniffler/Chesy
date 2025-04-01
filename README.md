@@ -1,4 +1,4 @@
-# Chesy (v1.0C)
+# Chesy (v1.0E)
 
 This is a discord bot made in lua to manage small scale chess tournaments and clubs. 
 
@@ -9,8 +9,8 @@ Once done, set the permissions for the bot and make sure to enable "SERVER MEMBR
 
 On the **bot** page (where you enabled the intents) you need to press "reset token" and copy the new token.
 
-Now, download the source code and extract it, make sure the stats.lua file is in the same directory (folder) as the source code file.
-You will need to edit **the last line** in the ```source_code.lua``` and replace YOUR_TOKEN_HERE with the token you have just copied from discord's website.
+Now, download the source code and extract it, make sure the ```stats.lua``` file, ```bot.lua``` file, and ```modules``` folder are in the same directory (folder).
+You will now need to edit **the last line** in the ```source_code.lua``` and replace YOUR_TOKEN_HERE with the token you have just copied from discord's website.
 
 After that you will need to install lit, luvi, and luvit - which all can be obtained from following the installation on [this](https://github.com/luvit/lit) page.
 > [!IMPORTANT]
@@ -32,3 +32,11 @@ If you renamed the source code file, replace ```source_code.lua``` with the new 
 If you want to use different algorithms for match-ups or would like add/remove/mod any command hop onto the [discordia wiki](https://github.com/SinisterRectus/Discordia/wiki) to find out what tools are available for doing so.
 > [!WARNING]
 Make sure that when you change the system used for scoring players, that the saveScore function is tuned accordingly as the current file format may not support your changes.
+## Structure and outline
+The code has been revised in patch v1.0E, all functions are defined as their custom module in the ```modules``` folder. If you wish to add one, make a new ```yourFunction.lua``` file there and import it in ```source_code.lua``` then add it to the _commands_ table along with it's respective call name (e.g. \help, \yourFunction etc.)
+> [!NOTE]
+In the code you will find that it says "\\\\help" instead of "\\help" as "\\" is an escape character and can cause errors if not used twice. Make sure to put "\\\\yourFunction" into the table
+
+There are further functions to assist you when you make a command, these can be found in ```modules/util_commands.lua``` along with commentry to help you.
+# Quick note
+This documentation is by no means thorough or exhaustive (fancy word) if you don't know how to do something go on to the [discordia wiki](https://github.com/SinisterRectus/Discordia/wiki). But be mindful that this is merely a project I have made for fun, I am not responsible for any issues you might have or misusages of this project.
