@@ -9,7 +9,7 @@ Once done, set the permissions for the bot and make sure to enable "SERVER MEMBR
 
 On the **bot** page (where you enabled the intents) you need to press "reset token" and copy the new token.
 
-Now, download the source code and extract it, make sure the ```stats.lua``` file, ```bot.lua``` file, and ```modules``` folder are in the same directory (folder).
+Now, [download](https://github.com/Kniffler/Chesy/releases) the source code and extract it, make sure the ```stats.lua``` file, ```bot.lua``` file, and ```modules``` folder are in the same directory (folder).
 You will now need to edit **the last line** in the ```source_code.lua``` and replace YOUR_TOKEN_HERE with the token you have just copied from discord's website.
 
 After that you will need to install lit, luvi, and luvit - which all can be obtained from following the installation on [this](https://github.com/luvit/lit) page.
