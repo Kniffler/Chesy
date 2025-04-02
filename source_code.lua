@@ -88,6 +88,7 @@ client:on('messageCreate', function(message)
 			stats = commands[cmd](message, stats) or stats
 		elseif cmd == "\\q" then
 			channelLinks = q.execute(message)
+			return
 		else
 			log("IMPROPER COMMAND DETECTED - returning banter message")
 			actualReply(message, ("That is not a proper command you absolute pawn\n\n(Use \\help you fool)"))
