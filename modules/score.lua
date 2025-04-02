@@ -34,14 +34,14 @@ function fs.execute(message, stats)
 		return
 	end
 	
-	if mode ~= "reset" and #arguments ~= 4 then
+	if mode ~= "reset" and mode ~= "remove" and #arguments ~= 4 then
 		log("Incorrect argument number for mode \""..mode.."\" found : Abandoning")
-		actualReply(message, "You used the wrong number of arguments for the "..mode.." mode\nTry \\help")
+		actualReply(message, "Your \""..mode.."\" mode failed to work on me\nTry \\help")
 		return
 	end
 
-	if mode ~= "reset" then
-		log("Mode is found not to be \"reset\" : Tallying new scores")
+	if mode ~= "reset" and mode ~= "remove" then
+		log("Mode is found not to be \"reset\" or \"remove\" : Tallying new scores")
 		winScore = tonumber(arguments[4]:match("%f[%a]w(%d+)") or 0)
 		drawScore = tonumber(arguments[4]:match("%f[%a]d(%d+)") or 0)
 		loseScore = tonumber(arguments[4]:match("%f[%a]l(%d+)") or 0)
@@ -53,14 +53,18 @@ function fs.execute(message, stats)
 		return
 	end
 	
+	if not stats[message.guild.id] then
+		log("No entry found for this guild : Creating empty entry")
+		stats[message.guild.id] = {}
+	end
 	if not stats[message.guild.id][target.id] then
 		log("Target has no entry for this guild : Creating entry with score string")
 		stats[message.guild.id][target.id] = { w=winScore, d=drawScore, l=loseScore }
 	end
 	
-	local oldW = stats[message.guild.id][target.id].w
-	local oldD = stats[message.guild.id][target.id].d
-	local oldL = stats[message.guild.id][target.id].l
+	local oldW = stats[message.guild.id][target.id].w or 0
+	local oldD = stats[message.guild.id][target.id].d or 0
+	local oldL = stats[message.guild.id][target.id].l or 0
 	
 	log("Initial guard clauses passed : Proceeding to command execution")
 	
@@ -69,6 +73,12 @@ function fs.execute(message, stats)
 		stats[message.guild.id][target.id].w = 0
 		stats[message.guild.id][target.id].d = 0
 		stats[message.guild.id][target.id].l = 0
+	elseif mode == "remove" then
+		log("Removal of entry requested : Granting")
+		stats[message.guild.id][target.id] = nil
+		actualReply(message, "User removed from leaderboard")
+		log("<SUCCESSFULL EXECUTION> score")
+		return
 	elseif mode == "set" then
 		stats[message.guild.id][target.id].w = winScore
 		stats[message.guild.id][target.id].d = drawScore

@@ -2,12 +2,11 @@
 local fs = {}
 
 function fs.execute(message, stats)
-	if not hasAdmin(message) then return end
 	message:delete()
-	
+	if not hasAdmin(message) then return end
 	local args = splitArguments(message.content)
 	local text = table.concat(args, " ", 2)
-	if text == "" then return end
+	if not text or text == "" then return end
 	log("Impersonating: "..message.author.username.." -> "..text)
 	
 	message.channel:send {

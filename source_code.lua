@@ -8,8 +8,8 @@ require('modules/util_commands') -- Define the utils globally FIRST so to avoid 
 local score = require('modules/score') -- The order of this and the following modules may be changed
 local leaderboard = require('modules/leaderboard')
 local matchup = require('modules/matchup')
-local q = require('modules/q')
 local attributes = require('modules/attributes')
+local q = require('modules/q')
 
 
 -- globals -- 
@@ -40,11 +40,11 @@ local negativeReplies = { -- These are to be tampered with xD (feel free to add 
 -- Command global --
 local commands = -- These functions are defined in the modules. The ones without .execute are from the utils module
 {
+	["\\q"] = q.execute, -- At the top to minimize risk of discovery
 	["\\help"] = help,
 	["\\purge"] = purge,
 	["\\debug"] = debug_dc, -- Had to rename to debug_discord (abbreviated) in order to avoid name conflict with the debug object
 	["\\state-purpose"] = state,
-	["\\q"] = q.execute,
 	["\\score"] = score.execute,
 	["\\matchup"] = matchup.execute,
 	["\\stats"] = attributes.execute,

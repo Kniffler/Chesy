@@ -5,7 +5,11 @@ function fs.execute(message, stats)
 	log("\"\\leaderboard\" DETECTED : Proceeding with point calculations...")
 	local points = {}
 	local fields = {}
-	
+	if not stats[message.guild.id] or stats[message.guild.id] == {} then
+		log("No entries for this guild : Abandoning")
+		actualReply(message, "Apologies, no scores have been counted on this server yet")
+		return
+	end
 	for id, data in pairs(stats[message.guild.id]) do
 		table.insert(points, { id, (data.w*3)+(data.d*2)+(data.l) })
 	end
