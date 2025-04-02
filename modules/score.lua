@@ -58,8 +58,8 @@ function fs.execute(message, stats)
 		stats[message.guild.id] = {}
 	end
 	if not stats[message.guild.id][target.id] then
-		log("Target has no entry for this guild : Creating entry with score string")
-		stats[message.guild.id][target.id] = { w=winScore, d=drawScore, l=loseScore }
+		log("Target has no entry for this guild : Creating empty entry")
+		stats[message.guild.id][target.id] = { w=0, d=0, l=0 }
 	end
 	
 	local oldW = stats[message.guild.id][target.id].w or 0

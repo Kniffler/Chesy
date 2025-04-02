@@ -39,7 +39,7 @@ local commandList = { -- Sorted as table for readability
 -- Helpful functions --
 function splitArguments(command)
 	local result = {}
-	for part in string.gmatch(command, "([^ ]+)") do -- No idea how, but this pattern sorts things by space
+	for part in string.gmatch(command, "([^%s]+)") do -- No idea how, but this pattern sorts things by space
 		table.insert(result, part)
 	end
 	return result
@@ -52,7 +52,8 @@ function log(text) -- Self explanatory
 	local file = io.open("logs.txt", "a")
 	if not file then
 		file = io.open("logs.txt", "w")
-	    file:write(string.format("[%s] %s\n", timestamp, "Encountered log issue, created new log file"))
+	    file:write(string.format("[%s] %s\n", timestamp, "Encountered a log issue, created new log file"))
+	    print(string.format("[%s] %s\n", timestamp, "Encountered a log issue, created new log file"))
 	    file:flush()
 	end
 	if text then
@@ -127,6 +128,25 @@ function saveScores(dict) -- Save the user attributes (scores) to the stats file
 	return dict
 end
 
+function saveChannels(links)
+	local file = io.open("channelLinks.lua", "w")
+	file:write("return {\n")
+	for guild, linkage in pairs(links) do
+		file:write("\t[\""..guild.."\"] = {\n")
+		if not linkage then goto continue end
+		for origin, control in pairs(linkage) do
+			local writerP1 = "\t\t[\""..origin.."\"]=\""..control.."\","
+			--local writerP2 = "\t\t[\""..control.."\"]=\""..origin.."\","
+			file:write(writerP1.."\n")
+			--file:write(writerP2.."\n\n")
+		end
+		file:write("\t},\n")
+		::continue::
+	end
+	file:write("}\n")
+	file:close()
+end
+
 function hasAdmin(message) -- Simple admin check for higher access commands
 	if message.member:hasPermission('administrator') then return true
 	else return false end
@@ -168,6 +188,8 @@ function debug_dc(message, stats) -- Avoiding naming contradictions with the sta
 		return
 	elseif arguments[2] == "scores" then
 		actualReply(message, "Here is the file I currently use for scoring in my system:", { "stats.lua" })
+	elseif arguments[2] == "links" then
+		actualReply(message, "Here are my channel links:", { "channelLinks.lua" })
 	elseif arguments[2] == "remove" then
 		stats[message.guild.id][message.mentionedUsers.first.id] = nil
 		saveScores(stats)
