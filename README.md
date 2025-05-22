@@ -1,4 +1,4 @@
-# Chesy (v1.10)
+# Chesy (v1.11)
 
 This is a discord bot made in lua to manage small scale chess tournaments and clubs. 
 
@@ -40,3 +40,6 @@ In the code you will find that it says "\\\\help" instead of "\\help" as "\\" is
 There are further functions to assist you when you make a command, these can be found in ```modules/util_commands.lua``` along with commentry to help you.
 # Quick note
 This documentation is by no means thorough or exhaustive (fancy word) if you don't know how to do something go on to the [discordia wiki](https://github.com/SinisterRectus/Discordia/wiki). But be mindful that this is merely a project I have made for fun, I am not responsible for any issues you might have or misusages of this project.
+
+# Changelogs
+- WE GOT AI BABYYY
