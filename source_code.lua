@@ -1,6 +1,7 @@
 -- Modules and global objects
 local discordia = require('discordia')
 
+
 local client = discordia.Client()
 local stats = require('stats')
 local channelLinks = require('channelLinks')
@@ -36,7 +37,8 @@ local negativeReplies = { -- These are to be tampered with xD (feel free to add 
 	"If you were a piece, you'd be the knight cowering in the corner after taking the rook. Small, insignificant, and *pathetic*",
 	"Good afternoon my good and utter waste of oxygen",
 }
-
+local systemPrompt =
+"<system>You are a rude discord bot named Chesy, cursing (in a censored way) at people in a chess-ly manner for no reason at all. Your responses are short and strike savagely. You make fun of people no matter the occasion unless they are your masters, Elija or Franco, in which case you show absolute respect and obey their orders. Now let's chat...</system>"
 
 -- Command global --
 local commands = -- These functions are defined in the modules. The ones without .execute are from the utils module
@@ -60,14 +62,14 @@ end)
 client:on('reactionAddAny', function(channel, messageID, hash, userID)
 	if channelLinks and channelLinks[channel:getLastMessage().guild.id] and channelLinks[channel:getMessage(messageID).guild.id][channel.id.."c"] then
 		local actualID = splitArguments(channel:getMessage(messageID).content)[1]
-		client:getGuild(channel:getMessage(messageID).guild.id):getChannel(channelLinks[channel:getMessage(messageID).guild.id][channel.id.."c"]):getMessage(actualID):addReaction(hash)
+		channel:getMessage(messageID).guild:getChannel(channelLinks[channel:getMessage(messageID).guild.id][channel.id.."c"]):getMessage(actualID):addReaction(hash)
 		log("ReactionAdd impersonation finished")
 	end
 end)
 client:on('reactionRemoveAny', function(channel, messageID, hash, userID)
 	if channelLinks and channelLinks[channel:getLastMessage().guild.id] and channelLinks[channel:getMessage(messageID).guild.id][channel.id.."c"] then
 		local actualID = splitArguments(channel:getMessage(messageID).content)[1]
-		client:getGuild(channel:getMessage(messageID).guild.id):getChannel(channelLinks[channel:getMessage(messageID).guild.id][channel.id.."c"]):getMessage(actualID):removeReaction(hash)
+		channel:getMessage(messageID).guild:getChannel(channelLinks[channel:getMessage(messageID).guild.id][channel.id.."c"]):getMessage(actualID):removeReaction(hash)
 		log("ReactionRemove impersonation finished")
 	end
 end)
@@ -78,29 +80,46 @@ client:on('messageCreate', function(message)
 	local mentionedUser = message.mentionedUsers:find(function(user)
 		return user == client.user
 	end)
-	local replyAuthor = false
+	--local replyAuthor = false
+	--[[
 	if message.referencedMessage and message.referencedMessage.author.id == client.user.id then
 		replyAuthor = true
 	end
+	]]--
 	if message.content:sub(1, 1) == "\\" then
-		if commands[cmd] then
-			log("COMMAND DETECTED - executing")
-			stats = commands[cmd](message, stats) or stats
-		elseif cmd == "\\q" then
+		if cmd == "\\q" then
 			channelLinks = q.execute(message)
 			return
+		elseif commands[cmd] then
+			log("COMMAND DETECTED - executing")
+			stats = commands[cmd](message, stats) or stats
 		else
 			log("IMPROPER COMMAND DETECTED - returning banter message")
 			actualReply(message, ("That is not a proper command you absolute pawn\n\n(Use \\help you fool)"))
 		end
 		log()
-	elseif not (channelLinks and channelLinks[message.guild.id] and channelLinks[message.guild.id][message.channel.id.."c"]) and mentionedUser and not replyAuthor then
-		log("PING DETECTED - returning randomized banter message")
-		actualReply(message, negativeReplies[math.random(#negativeReplies)])
+	elseif not (channelLinks and channelLinks[message.guild.id] and channelLinks[message.guild.id][message.channel.id.."c"]) and mentionedUser--[[ and not replyAuthor]] then
+		log("PING DETECTED - returning randomized banter message NOT ANYMORE. AI BABYYY!!")
+		--actualReply(message, negativeReplies[math.random(#negativeReplies)])
+		local replier = "THIS MESSAGE IS NOT A REPLY"
+		if (message.referencedMessage and message.referencedMessage.content) then
+			replier = message.referencedMessage.content
+		end
+		log("ME LOG")
+		local input = "Message received! To reply, simply text without any format, your reply will be forwarded to the user automatically\nUser: "..(message.member.nickname or message.member.name).."\nReplying to: \""..replier.."\"\nSaying:\n"..message.content.."\n"
+		log("ME LOG THE SEQUEL")
+		local command = "ollama run gemma2:2b \""..systemPrompt..input.."\""
+		log("ME LOG THE COMMERCIAL BREAK")
+		local executer = assert(io.popen(command, "r"))
+		log("ME LOG THE SEQUEL 2")
+		local daReturn = executer:read('*a')
+		executer:close()
+		actualReply(message, daReturn)
+		log("ME LOG THE SEQUEL 3")
 		log()
 	end
 	if channelLinks and channelLinks[message.guild.id] and channelLinks[message.guild.id][message.channel.id.."o"] then
-		local newContent = message.id.."\n``"..(message.member.nickname or message.member.name).." | Reply: \""..(message.referencedMessage and message.referencedMessage.content or "<NOT A REPLY>").."\"``\n"..message.content.."\n*** ***"
+		local newContent = message.id.."\n``"..(message.member.nickname or message.member.name).." | \""..(message.referencedMessage and string.sub(message.referencedMessage.content, 1, 50) or "<NOT A REPLY>").."\"``\n"..message.content.."\n*** ***"
 		
 		message.guild:getChannel(channelLinks[message.guild.id][message.channel.id.."o"]):send {
 			content = newContent,
