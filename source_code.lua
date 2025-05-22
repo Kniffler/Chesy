@@ -103,11 +103,7 @@ client:on('messageCreate', function(message)
 	elseif not (channelLinks and channelLinks[message.guild.id] and channelLinks[message.guild.id][message.channel.id.."c"]) and mentionedUser--[[ and not replyAuthor]] then
 		log("PING DETECTED - returning randomized banter message NOT ANYMORE. AI BABYYY!!")
 		--actualReply(message, negativeReplies[math.random(#negativeReplies)])
-		local replier = "THIS MESSAGE IS NOT A REPLY"
-		if (message.referencedMessage and message.referencedMessage.content) then
-			replier = message.referencedMessage.content
-		end
-		local input = "Message received! To reply, simply text without any format, your reply will be forwarded to the user automatically\nUser: "..(message.member.nickname or message.member.name).."\nReplying to: \""..replier.."\"\nSaying:\n"..message.content.."\n"
+		local input = "Message received! To reply, simply text without any format, your reply will be forwarded to the user automatically\nUser: "..(message.member.nickname or message.member.name).."\nSaying:\n"..message.content.."\n"
 		local command = "ollama run gemma2:2b \""..systemPrompt..input.."\""
 		local executer = assert(io.popen(command, "r"))
 		local daReturn = executer:read('*a')
