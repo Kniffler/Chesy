@@ -6,7 +6,7 @@ function fs.execute(message, stats)
 	
 	if not hasAdmin(message) then
 		log("Insufficient caller authority : Abandoning")
-		actualReply(message, "We apologize, however we do not condone peasants controlling the flow of the club.")
+		actualReply(message, "We apologize, however we do not condone peasants controlling the flow of the games.")
 		return
 	end
 	if not message.mentionedUsers or #message.mentionedUsers < 1 then
@@ -21,8 +21,17 @@ function fs.execute(message, stats)
 			return
 		end
 	end
-	log("Guard-clauses passed : Proceeding with shuffle")
-	
+	log("Guard-clauses passed : Proceeding with participant initiation")
+
+	local times = 1
+	if splitArguments(message.content) ~= message.mentionedUsers:count() + 1 then
+		times = tonumber(splitArguments(message.content)[2])
+		if times == nil then
+			log("Invalid repetition count given as argument : Abandoning")
+			actualReply("Please mind that I cannot interpret otherworldly numbers")
+			return
+		end
+	end
 	local participants = {}
 
 	for p in message.mentionedUsers:iter() do
@@ -31,47 +40,49 @@ function fs.execute(message, stats)
 
 	local matchupPairs = {}
 	local finalPairUps = "# ***Matchups***\nFor this session*\n\n"
+	
+	log("Participant initiation complete : Shuffling")
 
 	participants = shuffleTable(participants)
-
-	for i=1, #participants, 2 do
-		if participants[i+1] then
-			table.insert(matchupPairs, {participants[i], participants[i+1]})
-		else
-			table.insert(matchupPairs, {participants[i]})
+	for i=1, times, 1 do
+		for k=1, #participants, 2 do
+			if participants[k+1] then
+				table.insert(matchupPairs, {participants[k], participants[k+1]})
+			else
+				table.insert(matchupPairs, {participants[k]})
+			end
 		end
-	end
-	log("Testing for display pair-up")
+		log("Testing for display pair-up : i="..i)
 
-	if #participants%2 == 0 then
-		for _, pair in pairs(matchupPairs) do
+		if #participants%2 == 0 then
+			for _, pair in pairs(matchupPairs) do
+				local pairUpStr = pair[1].." **VS** "..pair[2].."\n"
+				finalPairUps = finalPairUps..pairUpStr
+			end
+			log("Even number of participants : Adding")
+			goto endOfLoop
+		end
+		log("Calculating odd match-ups")
+		
+		-- Shift all participants by 1 space and attach the old matchups, basically making the matchups even
+		local firstPart = participants[1]
+		for k=1, #participants-1 do
+			participants[k] = participants[k+1]
+		end
+		participants[#participants] = firstPart
+		
+		table.insert(matchupPairs[#matchupPairs], participants[#participants])
+		for k=#participants-1, 1, -2 do
+			table.insert(matchupPairs, {participants[k], participants[k-1]})
+		end
+
+		log("Adding odd match-ups")
+		for _, pair in ipairs(matchupPairs) do
 			local pairUpStr = pair[1].." **VS** "..pair[2].."\n"
 			finalPairUps = finalPairUps..pairUpStr
 		end
-		log("Even number of participants : Displaying")
-		actualReply(message, finalPairUps)
-		log("<SUCCESSFULL EXECUTION> matchup")
-		return
+		::endOfLoop::
 	end
-	log("Calculating odd match-ups...")
-	
-	-- Shift all participants by 1 space and attach the old matchups, basically making the matchups even
-	local firstPart = participants[1]
-	for i=1, #participants-1 do
-		participants[i] = participants[i+1]
-	end
-	participants[#participants] = firstPart
-	
-	table.insert(matchupPairs[#matchupPairs], participants[#participants])
-	for i=#participants-1, 1, -2 do
-		table.insert(matchupPairs, {participants[i], participants[i-1]})
-	end
-
-	for _, pair in ipairs(matchupPairs) do
-		local pairUpStr = pair[1].." **VS** "..pair[2].."\n"
-		finalPairUps = finalPairUps..pairUpStr
-	end
-	log("Displaying odd match-ups")
 	actualReply(message, finalPairUps)
 	log("<SUCCESSFULL EXECUTION> matchup")
 end

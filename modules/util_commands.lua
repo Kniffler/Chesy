@@ -1,4 +1,4 @@
--- Initialize randomness here because I am not smart enough to know where else to put it
+k-- Initialize randomness here because I am not smart enough to know where else to put it
 math.randomseed(os.time())
 
 local commandList = { -- Sorted as table for readability
@@ -107,8 +107,6 @@ function actualReply(toReply, text, filePaths)
 end
 
 function saveScores(dict) -- Save the user attributes (scores) to the stats file.
-	-- TODO:
-	-- Make it so that this works when completely erasing the stat file as currently it throws an error
 	local file = io.open("stats.lua", "w")
 	if not file then
 		log("Error: Unable to open stats file")
@@ -136,9 +134,7 @@ function saveChannels(links)
 		if not linkage then goto continue end
 		for origin, control in pairs(linkage) do
 			local writerP1 = "\t\t[\""..origin.."\"]=\""..control.."\","
-			--local writerP2 = "\t\t[\""..control.."\"]=\""..origin.."\","
 			file:write(writerP1.."\n")
-			--file:write(writerP2.."\n\n")
 		end
 		file:write("\t},\n")
 		::continue::
@@ -148,8 +144,8 @@ function saveChannels(links)
 end
 
 function hasAdmin(message) -- Simple admin check for higher access commands
-	if message.member:hasPermission('administrator') then return true
-	else return false end
+	if message.member:hasPermission('administrator') then return true end
+	return false
 end
 
 -- Actual commands
@@ -169,7 +165,7 @@ function state(message, stats)
 	log("...fuck it - It's done")
 end
 
-function debug_dc(message, stats) -- Avoiding naming contradictions with the standard debug object
+function debug_dc(message, stats) -- Avoiding reference errors with the standard debug object
 
 	-- This function may be edited freely for any additions you may have made to the bot
 	log("\"\\debug\" DETECTED : Proceeding with authority check...")
