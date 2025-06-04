@@ -25,11 +25,9 @@ function fs.execute(message, stats)
 
 	local times = 1
 	if splitArguments(message.content) ~= message.mentionedUsers:count() + 1 then
-		times = tonumber(splitArguments(message.content)[2])
+		times = tonumber(splitArguments(message.content)[2]) or 1
 		if times == nil then
-			log("Invalid repetition count given as argument : Abandoning")
-			actualReply("Please mind that I cannot interpret otherworldly numbers")
-			return
+			log("Invalid repetition count given as argument")
 		end
 	end
 	local participants = {}
@@ -39,7 +37,7 @@ function fs.execute(message, stats)
 	end
 
 	local matchupPairs = {}
-	local finalPairUps = "# ***Matchups***\nFor this session*\n\n"
+	local finalPairUps = "# ***Matchups***\n***For this session****\n\n"
 	
 	log("Participant initiation complete : Shuffling")
 

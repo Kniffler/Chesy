@@ -1,4 +1,4 @@
-k-- Initialize randomness here because I am not smart enough to know where else to put it
+-- Initialize randomness here because I am not smart enough to know where else to put it
 math.randomseed(os.time())
 
 local commandList = { -- Sorted as table for readability
