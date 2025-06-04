@@ -26,9 +26,6 @@ function fs.execute(message, stats)
 	local times = 1
 	if splitArguments(message.content) ~= message.mentionedUsers:count() + 1 then
 		times = tonumber(splitArguments(message.content)[2]) or 1
-		if times == nil then
-			log("Invalid repetition count given as argument")
-		end
 	end
 	local participants = {}
 
@@ -42,25 +39,21 @@ function fs.execute(message, stats)
 	log("Participant initiation complete : Shuffling")
 
 	participants = shuffleTable(participants)
-	for i=1, times, 1 do
-		for k=1, #participants, 2 do
-			if participants[k+1] then
-				table.insert(matchupPairs, {participants[k], participants[k+1]})
-			else
-				table.insert(matchupPairs, {participants[k]})
-			end
+	for k=1, #participants, 2 do
+		if participants[k+1] then
+			table.insert(matchupPairs, {participants[k], participants[k+1]})
+		else
+			table.insert(matchupPairs, {participants[k]})
 		end
+	end
+	-- TODO:
+	-- Make this work
+	for i=1, times, 1 do
 		log("Testing for display pair-up : i="..i)
 
 		if #participants%2 == 0 then
-			for _, pair in pairs(matchupPairs) do
-				local pairUpStr = pair[1].." **VS** "..pair[2].."\n"
-				finalPairUps = finalPairUps..pairUpStr
-			end
-			log("Even number of participants : Adding")
 			goto endOfLoop
 		end
-		log("Calculating odd match-ups")
 		
 		-- Shift all participants by 1 space and attach the old matchups, basically making the matchups even
 		local firstPart = participants[1]
@@ -73,14 +66,15 @@ function fs.execute(message, stats)
 		for k=#participants-1, 1, -2 do
 			table.insert(matchupPairs, {participants[k], participants[k-1]})
 		end
-
-		log("Adding odd match-ups")
-		for _, pair in ipairs(matchupPairs) do
-			local pairUpStr = pair[1].." **VS** "..pair[2].."\n"
-			finalPairUps = finalPairUps..pairUpStr
-		end
+		
 		::endOfLoop::
 	end
+	log("Adding match-ups")
+	for _, pair in ipairs(matchupPairs) do
+		local pairUpStr = pair[1].." **VS** "..pair[2].."\n"
+		finalPairUps = finalPairUps..pairUpStr
+	end
+	log("Displaying match-ups")
 	actualReply(message, finalPairUps)
 	log("<SUCCESSFULL EXECUTION> matchup")
 end
