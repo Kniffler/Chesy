@@ -39,17 +39,17 @@ function fs.execute(message, stats)
 	log("Participant initiation complete : Shuffling")
 
 	participants = shuffleTable(participants)
-	for k=1, #participants, 2 do
-		if participants[k+1] then
-			table.insert(matchupPairs, {participants[k], participants[k+1]})
-		else
-			table.insert(matchupPairs, {participants[k]})
-		end
-	end
 	-- TODO:
 	-- Make this work
 	for i=1, times, 1 do
 		log("Testing for display pair-up : i="..i)
+		for k=1, #participants, 2 do
+			if participants[k+1] then
+				table.insert(matchupPairs, {participants[k], participants[k+1]})
+			else
+				table.insert(matchupPairs, {participants[k]})
+			end
+		end
 
 		if #participants%2 == 0 then
 			goto endOfLoop
