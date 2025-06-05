@@ -68,11 +68,24 @@ function log(text) -- Self explanatory
 	file:close()
 end
 
+function keyPairMake(id1, id2)
+	return ((id1 < id2) and (id1 .. "_" .. id2)) or (id2 .. "_" .. id1)
+end
+
 function shuffleTable(table)
 	for i=#table, 2, -1 do
 		local j = math.random(i)
 		table[i], table[j] = table[j], table[i]
 	end
+	return table
+end
+
+function shiftTable(table)
+	local firstPart = table[1]
+	for i=1, #table-1 do
+		table[i] = table[i+1]
+	end
+	table[#table] = firstPart
 	return table
 end
 

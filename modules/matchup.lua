@@ -28,51 +28,84 @@ function fs.execute(message, stats)
 		times = tonumber(splitArguments(message.content)[2]) or 1
 	end
 	local participants = {}
-
+	local participantNames = {}
+	
 	for p in message.mentionedUsers:iter() do
-		table.insert(participants, p.mentionString)
+		--table.insert(participants, p.mentionString)
+		table.insert(participants, p.id)
+		participantNames[p.id] = p.mentionString
 	end
 
-	local matchupPairs = {}
-	local finalPairUps = "# ***Matchups***\n***For this session****\n\n"
+	local matchupPairs = {} -- The current pairs
+	local finalPairUps = "# **Matchups**\n***For this session* ***\n\n"
+	local sets = {} -- Each set is an evenly matched and calculated set of match-ups
+	local chanceLimit = (8*times)+10 -- The maximum amount of times a repeated matchup is to be reshuffled
+	local chanceCurrent = 1
+	local uniqueMatchups = {}
 	
-	log("Participant initiation complete : Shuffling")
-
-	participants = shuffleTable(participants)
-	-- TODO:
-	-- Make this work
-	for i=1, times, 1 do
-		log("Testing for display pair-up : i="..i)
-		for k=1, #participants, 2 do
-			if participants[k+1] then
-				table.insert(matchupPairs, {participants[k], participants[k+1]})
+	for x=1, times, 1 do
+		chanceCurrent = 1
+		::loopRedo::
+		if chanceCurrent >= chanceLimit then
+			goto endOfLoop
+		end
+		if x~=1 then
+			chanceCurrent = chanceCurrent+1
+		end
+		actualReply(message, ""..chanceCurrent)
+		participants = shuffleTable(participants)
+		for i=1, #participants, 2 do
+			if participants[i+1] then
+				local address = keyPairMake(participants[i], participants[i+1])
+				if uniqueMatchups[address] then
+					goto loopRedo
+				else
+					table.insert(matchupPairs, {participants[i], participants[i+1]})
+					uniqueMatchups[address] = true
+				end
 			else
-				table.insert(matchupPairs, {participants[k]})
+				table.insert(matchupPairs, {participants[i]})
 			end
 		end
-
+		
 		if #participants%2 == 0 then
 			goto endOfLoop
 		end
-		
+
 		-- Shift all participants by 1 space and attach the old matchups, basically making the matchups even
-		local firstPart = participants[1]
-		for k=1, #participants-1 do
-			participants[k] = participants[k+1]
-		end
-		participants[#participants] = firstPart
-		
+		participants = shiftTable(participants)
 		table.insert(matchupPairs[#matchupPairs], participants[#participants])
-		for k=#participants-1, 1, -2 do
-			table.insert(matchupPairs, {participants[k], participants[k-1]})
+		
+		if uniqueMatchups[keyPairMake(matchupPairs[#matchupPairs][1], matchupPairs[#matchupPairs][2])] then
+			matchupPairs[#matchupPairs] = nil
+			goto loopRedo
+		else
+			uniqueMatchups[keyPairMake(matchupPairs[#matchupPairs][1], matchupPairs[#matchupPairs][2])] = true
+		end
+		
+		for i=#participants-1, 1, -2 do
+			local address = keyPairMake(participants[i], participants[i-1])
+			if uniqueMatchups[address] then
+				goto loopRedo
+			else
+				table.insert(matchupPairs, {participants[i], participants[i-1]})
+				uniqueMatchups[address] = true
+			end
 		end
 		
 		::endOfLoop::
+		chanceCurrent = 0
+		table.insert(sets, matchupPairs)
+		matchupPairs = nil or {}
 	end
+	
 	log("Adding match-ups")
-	for _, pair in ipairs(matchupPairs) do
-		local pairUpStr = pair[1].." **VS** "..pair[2].."\n"
-		finalPairUps = finalPairUps..pairUpStr
+	for index, set in ipairs(sets) do
+		finalPairUps = finalPairUps.."**Bracket "..index..":** \n"
+		for _, pair in ipairs(set) do
+			local pairUpStr = participantNames[pair[1]].." **VS** "..participantNames[pair[2]].."\n"
+			finalPairUps = finalPairUps..pairUpStr
+		end
 	end
 	log("Displaying match-ups")
 	actualReply(message, finalPairUps)
