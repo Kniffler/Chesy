@@ -21,7 +21,6 @@ function fs.execute(message, stats)
 			return
 		end
 	end
-	log("Guard-clauses passed : Proceeding with participant initiation")
 
 	local times = 1
 	if splitArguments(message.content) ~= message.mentionedUsers:count() + 1 then
@@ -35,81 +34,103 @@ function fs.execute(message, stats)
 		table.insert(participants, p.id)
 		participantNames[p.id] = p.mentionString
 	end
+	if times > #participants-1 then
+		log("Invalid participation times : Abandoning")
+		actualReply(message, "I cannot repeat this many times for such a limited set of people")
+		return
+	end
+	if #participants%2~=0 and times%2~=0 then
+		log("Uneven distributent count : Abandoning")
+		actualReply(message, "Letting an uneven amount of people play, with an uneven amount of times each, is not mathematically feasible in chess.")
+		return
+	end
+	
+	log("Guard-clauses passed : Proceeding with participant initiation")
 
-	local matchupPairs = {} -- The current pairs
 	local finalPairUps = "# **Matchups**\n***For this session* ***\n\n"
-	local sets = {} -- Each set is an evenly matched and calculated set of match-ups
-	local chanceLimit = (8*times)+10 -- The maximum amount of times a repeated matchup is to be reshuffled
-	local chanceCurrent = 1
-	local uniqueMatchups = {}
-	
-	for x=1, times, 1 do
-		chanceCurrent = 1
-		::loopRedo::
-		if chanceCurrent >= chanceLimit then
-			goto endOfLoop
-		end
-		if x~=1 then
-			chanceCurrent = chanceCurrent+1
-		end
-		actualReply(message, ""..chanceCurrent)
-		participants = shuffleTable(participants)
-		for i=1, #participants, 2 do
-			if participants[i+1] then
-				local address = keyPairMake(participants[i], participants[i+1])
-				if uniqueMatchups[address] then
-					goto loopRedo
-				else
-					table.insert(matchupPairs, {participants[i], participants[i+1]})
-					uniqueMatchups[address] = true
-				end
-			else
-				table.insert(matchupPairs, {participants[i]})
-			end
-		end
-		
-		if #participants%2 == 0 then
-			goto endOfLoop
-		end
 
-		-- Shift all participants by 1 space and attach the old matchups, basically making the matchups even
-		participants = shiftTable(participants)
-		table.insert(matchupPairs[#matchupPairs], participants[#participants])
-		
-		if uniqueMatchups[keyPairMake(matchupPairs[#matchupPairs][1], matchupPairs[#matchupPairs][2])] then
-			matchupPairs[#matchupPairs] = nil
-			goto loopRedo
-		else
-			uniqueMatchups[keyPairMake(matchupPairs[#matchupPairs][1], matchupPairs[#matchupPairs][2])] = true
+ 	log("Generating possible matches for this line-up")
+ 	participants = shuffleTable(participants)
+	local allMatches = {}
+	local participantMapper = {}
+	
+	for i=1, #participants, 1 do
+		if not participants[i+1] then
+			break
 		end
 		
-		for i=#participants-1, 1, -2 do
-			local address = keyPairMake(participants[i], participants[i-1])
-			if uniqueMatchups[address] then
-				goto loopRedo
-			else
-				table.insert(matchupPairs, {participants[i], participants[i-1]})
-				uniqueMatchups[address] = true
+		for k=i+1, #participants, 1 do
+			local key = makeKey(participants[i], participants[k])
+			allMatches[key] = {participants[i], participants[k]}
+			
+			participantMapper[participants[i]] = participantMapper[participants[i]] or {}
+			participantMapper[participants[k]] = participantMapper[participants[k]] or {}
+			
+			table.insert(participantMapper[participants[i]], participants[k])
+			table.insert(participantMapper[participants[k]], participants[i])
+		end
+	end
+
+	log("Filtering using chain-method")
+	local finalMatches = {}
+	local lightMapper = trueCopy(participantMapper)
+	local hardMapper = trueCopy(participantMapper)
+	
+	for i=1, times, 1 do 
+	--[[
+		It took me a bit to understand, but the basics is that when running just once,
+		the algorithm gives 2 games per person - this cannot be changed without changing the algorithm.
+		Another downside of this is that people can only play in multiples of 2, so 2, 4 or 6 games per person
+		with no option of going between, like at 9 players, where having 1 game per person would make 9 games,
+		but this algorithm would give 2 games per player, so 18 games. Inefficient but works for now.
+		
+	]]
+		lightMapper = trueCopy(hardMapper)
+		local firstIterant = participants[math.random(#participants)]
+		local currentIterant = firstIterant
+		log("First iterant: "..firstIterant)
+		log("Current iterant: "..currentIterant)
+		log("Moving into body for-loop")
+		for k=1, #participants, 1 do 
+			if k%2==0 then
+				goto loopEnd
 			end
+			log("Current iterant: "..currentIterant)
+			local nextIterantIndex = math.random(#lightMapper[currentIterant])
+			log("Next iterant index: "..nextIterantIndex)
+			local nextIterant = lightMapper[currentIterant][nextIterantIndex] or firstIterant
+			log("Next iterant: "..(nextIterant or "NIL"))
+			
+			local adderKey = makeKey(currentIterant, nextIterant)
+			log("Changing hardMapper")
+			hardMapper[currentIterant] = removeArrayValue(hardMapper[currentIterant], nextIterant)
+			hardMapper[nextIterant] = removeArrayValue(hardMapper[nextIterant], currentIterant)
+			
+			log("Changing lightMapper")
+			lightMapper = removeValueFromDictArrays(lightMapper, currentIterant)
+
+			finalMatches[adderKey] = allMatches[adderKey]
+			currentIterant = nextIterant
+			::loopEnd::
 		end
-		
-		::endOfLoop::
-		chanceCurrent = 0
-		table.insert(sets, matchupPairs)
-		matchupPairs = nil or {}
+	end
+	--[[ A past idea (and likely bad) on how to make the matchups able to give 1 game per person
+	for i=1, #finalMatches, 2 do
+		finalMatches[i] = nil
+	end
+	]]
+ 	log("Calculating display string")
+
+	-- I don't like the word index so this guy is called dex from now on
+	for dex, pair in pairs(finalMatches) do
+		local pairUpStr = participantNames[pair[1]].." **VS** "..participantNames[pair[2]].."\n"
+		finalPairUps = finalPairUps..pairUpStr
 	end
 	
-	log("Adding match-ups")
-	for index, set in ipairs(sets) do
-		finalPairUps = finalPairUps.."**Bracket "..index..":** \n"
-		for _, pair in ipairs(set) do
-			local pairUpStr = participantNames[pair[1]].." **VS** "..participantNames[pair[2]].."\n"
-			finalPairUps = finalPairUps..pairUpStr
-		end
-	end
 	log("Displaying match-ups")
 	actualReply(message, finalPairUps)
 	log("<SUCCESSFULL EXECUTION> matchup")
+
 end
 
 return fs
