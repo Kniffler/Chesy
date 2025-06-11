@@ -39,92 +39,92 @@ function fs.execute(message, stats)
 		actualReply(message, "I cannot repeat this many times for such a limited set of people")
 		return
 	end
+	
 	if #participants%2~=0 and times%2~=0 then
 		log("Uneven distributent count : Abandoning")
-		actualReply(message, "Letting an uneven amount of people play, with an uneven amount of times each, is not mathematically feasible in chess.")
+		actualReply(message, "Letting an uneven amount of people play, with an uneven amount of times each, is not mathematically feasible in chess.\n")
 		return
 	end
 	
-	log("Guard-clauses passed : Proceeding with participant initiation")
+	log("Guard-clauses passed : Generating possible matches for this line-up")
 
-	local finalPairUps = "# **Matchups**\n***For this session* ***\n\n"
-
- 	log("Generating possible matches for this line-up")
  	participants = shuffleTable(participants)
 	local allMatches = {}
-	local participantMapper = {}
+	local allOrder = {}
 	
 	for i=1, #participants, 1 do
-		if not participants[i+1] then
-			break
-		end
-		
+		if not participants[i+1] then break end
+
 		for k=i+1, #participants, 1 do
 			local key = makeKey(participants[i], participants[k])
 			allMatches[key] = {participants[i], participants[k]}
-			
-			participantMapper[participants[i]] = participantMapper[participants[i]] or {}
-			participantMapper[participants[k]] = participantMapper[participants[k]] or {}
-			
-			table.insert(participantMapper[participants[i]], participants[k])
-			table.insert(participantMapper[participants[k]], participants[i])
+			table.insert(allOrder, key)
 		end
 	end
 
-	log("Filtering using chain-method")
-	local finalMatches = {}
-	local lightMapper = trueCopy(participantMapper)
-	local hardMapper = trueCopy(participantMapper)
-	
-	for i=1, times, 1 do 
+	local matchOrder = {}
 	--[[
-		It took me a bit to understand, but the basics is that when running just once,
-		the algorithm gives 2 games per person - this cannot be changed without changing the algorithm.
-		Another downside of this is that people can only play in multiples of 2, so 2, 4 or 6 games per person
-		with no option of going between, like at 9 players, where having 1 game per person would make 9 games,
-		but this algorithm would give 2 games per player, so 18 games. Inefficient but works for now.
-		
-	]]
-		lightMapper = trueCopy(hardMapper)
-		local firstIterant = participants[math.random(#participants)]
-		local currentIterant = firstIterant
-		log("First iterant: "..firstIterant)
-		log("Current iterant: "..currentIterant)
-		log("Moving into body for-loop")
-		for k=1, #participants, 1 do 
-			if k%2==0 then
-				goto loopEnd
-			end
-			log("Current iterant: "..currentIterant)
-			local nextIterantIndex = math.random(#lightMapper[currentIterant])
-			log("Next iterant index: "..nextIterantIndex)
-			local nextIterant = lightMapper[currentIterant][nextIterantIndex] or firstIterant
-			log("Next iterant: "..(nextIterant or "NIL"))
-			
-			local adderKey = makeKey(currentIterant, nextIterant)
-			log("Changing hardMapper")
-			hardMapper[currentIterant] = removeArrayValue(hardMapper[currentIterant], nextIterant)
-			hardMapper[nextIterant] = removeArrayValue(hardMapper[nextIterant], currentIterant)
-			
-			log("Changing lightMapper")
-			lightMapper = removeValueFromDictArrays(lightMapper, currentIterant)
+		An array of keys to keep track of the order
+		in sortedMatches to systematically remove excess matches 
+	]]--
+	local perMap = {}
+	--[[
+		An array of numbers that counts if every participant
+		plays the correct amount of times
+	]]--
+	
+	local repetition = 1
+	local foundIncorrect = false
+	
+	repeat
+		foundIncorrect = false
+		matchOrder = {}
+		perMap = {}
+		log("Filtering using remove count : Attempt - "..repetition)
 
-			finalMatches[adderKey] = allMatches[adderKey]
-			currentIterant = nextIterant
-			::loopEnd::
+		
+		allOrder = shuffleTable(allOrder)
+		if #participants == times then
+			log("Amount of match-ups is given : Using efficiency skip")
+			break
 		end
-	end
-	--[[ A past idea (and likely bad) on how to make the matchups able to give 1 game per person
-	for i=1, #finalMatches, 2 do
-		finalMatches[i] = nil
-	end
-	]]
+		for i=1, #allOrder, 1 do 
+			perMap[allMatches[allOrder[i]][1]] = perMap[allMatches[allOrder[i]][1]] or 0
+			perMap[allMatches[allOrder[i]][2]] = perMap[allMatches[allOrder[i]][2]] or 0
+
+			local condition1 = (perMap[allMatches[allOrder[i]][1]] and perMap[allMatches[allOrder[i]][1]]) or false
+			local condition2 = (perMap[allMatches[allOrder[i]][2]] and perMap[allMatches[allOrder[i]][2]]) or false
+			if condition1 and perMap[allMatches[allOrder[i]][1]]+1 <= times and condition2 and perMap[allMatches[allOrder[i]][2]]+1 <= times then
+				local key = allOrder[i]
+				perMap[allMatches[allOrder[i]][1]] = perMap[allMatches[allOrder[i]][1]]+1
+				perMap[allMatches[allOrder[i]][2]] = perMap[allMatches[allOrder[i]][2]]+1
+				table.insert(matchOrder, key)
+			end
+		end
+		for _, person in pairs(perMap) do
+			if person~=times then
+				repetition = repetition+1
+				foundIncorrect = true
+				break
+			end
+		end
+	until not foundIncorrect
+	
  	log("Calculating display string")
+	
+	local finalPairUps = "# **Matchups:**\n"
 
 	-- I don't like the word index so this guy is called dex from now on
-	for dex, pair in pairs(finalMatches) do
-		local pairUpStr = participantNames[pair[1]].." **VS** "..participantNames[pair[2]].."\n"
+	for dex, key in ipairs(matchOrder) do
+		local pair = allMatches[key]
+		local pairUpStr = ((pair and participantNames[pair[1]]) or "NIL").." **VS** "..((pair and participantNames[pair[2]]) or "NIL").."\n"
 		finalPairUps = finalPairUps..pairUpStr
+	end
+	
+	if repetition==1 then
+		finalPairUps = finalPairUps.."||*Calculated within 1 attempt*||"
+	else 
+		finalPairUps = finalPairUps.."||*Calculated within "..repetition.." attempts*||"
 	end
 	
 	log("Displaying match-ups")

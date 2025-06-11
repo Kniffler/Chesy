@@ -9,7 +9,9 @@ local commandList = { -- Sorted as table for readability
 	"		*log* - attaches the log file",
 	"		*remove* - remove the entry for target",
 	"		*clear-log* - clears the log file",
-	"**\\matchup <@user1, @user2>...** | Create a matchup for all pinged players",
+	"**\\matchup <optional: GPP> <@user1, @user2>...** | Create a matchup for all pinged players",
+	"	*GPP* - games per person",
+	"		The number of times each person will play",
 	"**\\stats** | Lists your stats",
 	"**\\purge** | Delete all entries for this server (clear leaderboard)",
 	"**\\leaderboard** | Show the current leaderboard",
@@ -78,89 +80,6 @@ function shuffleTable(table)
 		table[i], table[j] = table[j], table[i]
 	end
 	return table
-end
---[[
-function removeArrayDictOccurences(dict, occurence)
-	log("\nremoveArrayDictOccurences BEFORE:\n")
-	for dIndex, array in pairs(dict) do
-		log("dIndex: "..(dIndex or "NIL"))
-		for index, item in ipairs(array) do
-			log("\tindex: "..(index or "NIL"))
-		end
-	end
-	for dIndex, array in pairs(dict) do
-		for index, item in ipairs(array) do
-			if item == occurence and dict[dIndex][index] then
-				--log("Removing dIndex: "..dIndex.." and index: "..index)
-				dict[dIndex][index] = nil
-			end
-		end
-	end
-	log("\nremoveArrayDictOccurences AFTER:\n")
-	for dIndex, array in pairs(dict) do
-		log("dIndex: "..(dIndex or "NIL"))
-		for index, item in ipairs(array) do
-			log("\tindex: "..(index or "NIL"))
-		end
-	end
-	return dict
-end
-]]
-function removeArrayValue(array, remove)
-	local newArray = {}
-	log("\n\nremoveArrayValue BEFORE:\n")
-	for index, item in ipairs(array) do
-		log("\tindex: "..(index or "NIL").." | item: "..(item or "NIL"))
-	end
-	for _, val in ipairs(array) do
-		if val ~= remove then
-			table.insert(newArray, val)
-		end
-	end
-	log("\n\nremoveArrayValue AFTER:\n")
-	for index, item in ipairs(newArray) do
-		log("\tindex: "..(index or "NIL").." | item: "..(item or "NIL"))
-	end
-	return newArray
-end
-
-function removeValueFromDictArrays(dict, remove)
-	log("\n\nremoveValueFromDictArrays BEFORE:\n")
-	for dIndex, array in pairs(dict) do
-		log("dIndex: "..(dIndex or "NIL"))
-		for index, item in ipairs(array) do
-			log("\tindex: "..(index or "NIL").." | item: "..(item or "NIL"))
-		end
-	end
-    for key, array in pairs(dict) do
-        local newArray = {}
-        for _, val in ipairs(array) do
-            if val ~= remove then
-                table.insert(newArray, val)
-            end
-        end
-        dict[key] = newArray -- Replace the old array with the filtered one
-    end
-    log("\n\nremoveValueFromDictArrays AFTER:\n")
-   	for dIndex, array in pairs(dict) do
-   		log("dIndex: "..(dIndex or "NIL"))
-   		for index, item in ipairs(array) do
-			log("\tindex: "..(index or "NIL").." | item: "..(item or "NIL"))
-   		end
-   	end
-    return dict
-end
-
-function trueCopy(src)
-	local dest = {}
-	for k, v in pairs(src) do
-		if type(v) == "table" then
-			dest[k] = trueCopy(v)
-		else
-			dest[k] = v
-		end
-	end
-	return dest
 end
 
 function tableReply(toReply, title, desc, fields, endTxt)
