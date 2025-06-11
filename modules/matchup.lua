@@ -9,9 +9,9 @@ function fs.execute(message, stats)
 		actualReply(message, "We apologize, however we do not condone peasants controlling the flow of the games.")
 		return
 	end
-	if not message.mentionedUsers or #message.mentionedUsers < 1 then
+	if not message.mentionedUsers or #message.mentionedUsers < 3 then --Doing a smart here, as my fancy formula fails with 2 people. And luckily 2 people is an obvious case
 		log("Insufficient/invalid number of participants : Abandoning")
-		actualReply(message, "You need to ping all participants")
+		actualReply(message, "Excuse me, how the heck do you expect me to match up "..(#message.mentionedUsers or "0").." people??")
 		return
 	end
 	for usr in message.mentionedUsers:iter() do
@@ -22,27 +22,55 @@ function fs.execute(message, stats)
 		end
 	end
 
-	local times = 1
-	if splitArguments(message.content) ~= message.mentionedUsers:count() + 1 then
-		times = tonumber(splitArguments(message.content)[2]) or 1
-	end
+	log("First clauses passed : Moving onto participant initiation and GPP prediction")
+	-- GPP = Games Per Person
+	
 	local participants = {}
 	local participantNames = {}
 	
-	for p in message.mentionedUsers:iter() do
-		--table.insert(participants, p.mentionString)
+	for p in message.mentionedUsers:iter() do --	Simply iterate over all mentioned users and get their IDs
 		table.insert(participants, p.id)
-		participantNames[p.id] = p.mentionString
+		participantNames[p.id] = p.mentionString --	Store user mentionStrings in dict. because I have no way of getting them another way later in the code
+	end
+
+	local finalPairUps = "# **Matchups:**\n"
+	--local times = math.min(#participants-1, 4)
+	local times = #participants-1
+	---local fancyFormula = math.max(math.floor((0.65*times)+0.5), 2) 
+	local fancyFormula = math.max(math.floor((-0.35*times)+4.5), 2) 
+	--[[
+		Put "y = (-0.35*(-x+6))+4" into desmos. (https://www.desmos.com/calculator)
+		The x axis represents the maximum amount of GPP possible - 6 is simply the starting point for 6 participants. Feel free to change this
+		After that we solve for x=0, and now this simplifies into "-0.35*(-0+GPP)+4" -> "-0.35*(GPP)+4"
+			- In the code it is +4.5 to round to the nearest whole number using math.floor later. I just simplified +0.5 into that formula
+		The y axis now represents the ideal amount of GPP to use for this amount of players.
+		Note that this can easily be adjusted with the gradient. But the rest of the code is sensitive to this formula in specific.
+			Please tune the rest of these guard clauses accordingly.
+
+		Now we simply test if it's lower than 2 by math.max-ing it with 2. You can also use other values, e.g. 1, for this without having 
+		to adjust all my spaghetti code.
+	]]
+	log("Automatic prediction: "..fancyFormula)
+	times = fancyFormula
+	
+	if #splitArguments(message.content) ~= message.mentionedUsers:count() + 1 then
+		times = tonumber(splitArguments(message.content)[2]) or fancyFormula
+	end
+	if #participants%2~=0 and times%2~=0 then
+		log("Uneven distributent count : Correcting")
+		if times+1 <= #participants-1 then
+			times = times+1
+		elseif times-1 > 1 then
+			times = times-1
+		else
+			log("Fancy formula failed : Abandoning")
+			actualReply(message, "By total prediction and expectation, my fancy internal mathematics failed.\nPlease specify the amount of games-per-person manually")
+			return
+		end
 	end
 	if times > #participants-1 then
 		log("Invalid participation times : Abandoning")
 		actualReply(message, "I cannot repeat this many times for such a limited set of people")
-		return
-	end
-	
-	if #participants%2~=0 and times%2~=0 then
-		log("Uneven distributent count : Abandoning")
-		actualReply(message, "Letting an uneven amount of people play, with an uneven amount of times each, is not mathematically feasible in chess.\n")
 		return
 	end
 	
@@ -84,8 +112,9 @@ function fs.execute(message, stats)
 
 		
 		allOrder = shuffleTable(allOrder)
-		if #participants == times then
+		if #participants-1 == times then
 			log("Amount of match-ups is given : Using efficiency skip")
+			matchOrder=allOrder
 			break
 		end
 		for i=1, #allOrder, 1 do 
@@ -112,7 +141,6 @@ function fs.execute(message, stats)
 	
  	log("Calculating display string")
 	
-	local finalPairUps = "# **Matchups:**\n"
 
 	-- I don't like the word index so this guy is called dex from now on
 	for dex, key in ipairs(matchOrder) do
@@ -121,7 +149,7 @@ function fs.execute(message, stats)
 		finalPairUps = finalPairUps..pairUpStr
 	end
 	
-	if repetition==1 then
+	if repetition==1 then -- Shut up, grammar is important
 		finalPairUps = finalPairUps.."||*Calculated within 1 attempt*||"
 	else 
 		finalPairUps = finalPairUps.."||*Calculated within "..repetition.." attempts*||"
