@@ -42,4 +42,8 @@ There are further functions to assist you when you make a command, these can be 
 This documentation is by no means thorough or exhaustive (fancy word) if you don't know how to do something go on to the [discordia wiki](https://github.com/SinisterRectus/Discordia/wiki). But be mindful that this is merely a project I have made for fun, I am not responsible for any issues you might have or misusages of this project.
 
 # Changelogs
-- No more AI D:
+- Removed all those uneeded functions from util_commands.lua
+- Removed all those log commands
+- Remade matching algorithm.
+    It can now handle uneven as well as even amounts of players without resorting to multiples of 2.
+- Donuts
