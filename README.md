@@ -1,4 +1,4 @@
-# Chesy (v1.1B)
+# Chesy (v1.1C)
 
 This is a discord bot made in lua to manage small scale chess tournaments and clubs. 
 
