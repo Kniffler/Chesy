@@ -34,27 +34,11 @@ function fs.execute(message, stats)
 	end
 
 	local finalPairUps = "# **Matchups:**\n"
-	--local times = math.min(#participants-1, 4)
-	local times = #participants-1
-	---local fancyFormula = math.max(math.floor((0.65*times)+0.5), 2) 
-	local fancyFormula = math.max(math.floor((-0.35*times)+4.5), 2) 
-	--[[
-		Put "y = (-0.35*(-x+6))+4" into desmos. (https://www.desmos.com/calculator)
-		The x axis represents the maximum amount of GPP possible - 6 is simply the starting point for 6 participants. Feel free to change this
-		After that we solve for x=0, and now this simplifies into "-0.35*(-0+GPP)+4" -> "-0.35*(GPP)+4"
-			- In the code it is +4.5 to round to the nearest whole number using math.floor later. I just simplified +0.5 into that formula
-		The y axis now represents the ideal amount of GPP to use for this amount of players.
-		Note that this can easily be adjusted with the gradient. But the rest of the code is sensitive to this formula in specific.
-			Please tune the rest of these guard clauses accordingly.
-
-		Now we simply test if it's lower than 2 by math.max-ing it with 2. You can also use other values, e.g. 1, for this without having 
-		to adjust all my spaghetti code.
-	]]
-	log("Automatic prediction: "..fancyFormula)
-	times = fancyFormula
+	local times = math.min(#participants-1, 3)
+	log("Automatic prediction: "..math.min(#participants-1, 3))
 	
 	if #splitArguments(message.content) ~= message.mentionedUsers:count() + 1 then
-		times = tonumber(splitArguments(message.content)[2]) or fancyFormula
+		times = tonumber(splitArguments(message.content)[2]) or math.min(#participants-1, 3)
 	end
 	if #participants%2~=0 and times%2~=0 then
 		log("Uneven distributent count : Correcting")
@@ -63,7 +47,7 @@ function fs.execute(message, stats)
 		elseif times-1 > 1 then
 			times = times-1
 		else
-			log("Fancy formula failed : Abandoning")
+			log("Fancy adjustment failed : Abandoning")
 			actualReply(message, "By total prediction and expectation, my fancy internal mathematics failed.\nPlease specify the amount of games-per-person manually")
 			return
 		end
