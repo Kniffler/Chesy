@@ -110,7 +110,8 @@ client:on('messageCreate', function(message)
 		local refer = nil
 		if message.referencedMessage then
 			refer = { message = splitArguments(message.referencedMessage.content)[1], mention = false }
-		end
+		end -- Basically just replies in an efficient/user friendly manner
+		
 		message.guild:getChannel(channelLinks[message.guild.id][message.channel.id.."c"]):send {
 			content = message.content,
 			reference = refer,
